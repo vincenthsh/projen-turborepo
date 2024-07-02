@@ -9,20 +9,20 @@ To create a new project, run the following command and follow the instructions:
 ```sh
 $> mkdir my-monorepo
 $> cd my-monorepo
-$> npx projen new --from projen-turborepo --projenrc-ts
+$> npx projen new --from @vincenthsh/projen-turborepo --projenrc-ts
 🤖 Synthesizing project...
 ...
 ```
 
 ## Demo
 
-See [`projen-turborepo-test`](https://github.com/moltar/projen-turborepo-test) GitHub repo for
+See [`projen-turborepo-test`](https://github.com/vincenthsh/projen-turborepo-test) GitHub repo for
 a demo project.
 
 ## Example
 
 ```ts
-import { TurborepoProject } from 'projen-turborepo'
+import { TurborepoProject } from '@vincenthsh/projen-turborepo'
 import { typescript } from 'projen';
 
 const turbo = new TurborepoProject({

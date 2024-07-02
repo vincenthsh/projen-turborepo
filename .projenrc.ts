@@ -1,21 +1,16 @@
-import { javascript, cdk } from 'projen'
+import { javascript, cdk } from "projen";
 
-const authorName = 'Roman Filippov'
-const authorAddress = 'rf@romanfilippov.com'
-const repository = 'https://github.com/moltar/projen-turborepo'
+const authorName = "Roman Filippov";
+const authorAddress = "rf@romanfilippov.com";
+// forked from https://github.com/moltar/projen-turborepo
+const repository = "https://github.com/vincenthsh/projen-turborepo";
 
 const project = new cdk.JsiiProject({
-  defaultReleaseBranch: 'master',
-  name: 'projen-turborepo',
-  description: 'Projen project type for Turborepo monorepo setup.',
-  keywords: [
-    'projen',
-    'turborepo',
-    'turbo',
-    'monorepo',
-    'typescript',
-  ],
-  license: 'MIT',
+  defaultReleaseBranch: "master",
+  name: "@vincenthsh/projen-turborepo",
+  description: "Projen project type for Turborepo monorepo setup.",
+  keywords: ["projen", "turborepo", "turbo", "monorepo", "typescript"],
+  license: "MIT",
   repositoryUrl: repository,
   repository: repository,
   authorName,
@@ -24,27 +19,29 @@ const project = new cdk.JsiiProject({
   authorAddress: authorAddress,
   authorEmail: authorAddress,
   projenrcTs: true,
-  packageManager: javascript.NodePackageManager.NPM,
-  bundledDeps: ['dotalias'],
-  peerDeps: [
-    'projen',
-  ],
-  devDeps: [
-    'projen@0.54.43',
-    'yaml',
-    '@types/yaml',
-    'turbo@^1',
-  ],
+  packageManager: javascript.NodePackageManager.PNPM,
+  bundledDeps: ["dotalias"],
+  peerDeps: ["projen", "constructs@^10.3.0"],
+  devDeps: ["projen@0.82.8", "yaml", "@types/yaml", "turbo@^2"],
   releaseToNpm: true,
-  depsUpgrade: false,
+  npmRegistryUrl: "https://npm.pkg.github.com",
+  depsUpgrade: true,
+  eslint: true,
+  prettier: true,
   stale: false,
-})
 
-project.eslint?.addRules({
-  semi: [
-    'error',
-    'never',
-  ],
-})
+  jsiiVersion: "~5.4.0",
+  typescriptVersion: "~5.4.0",
+  pnpmVersion: "9",
+  workflowNodeVersion: "20",
 
-project.synth()
+  // disable API.md for now
+  docgen: false,
+});
+project.gitignore.exclude(".env");
+
+// project.eslint?.addRules({
+//   semi: ["error", "never"],
+// });
+
+project.synth();
