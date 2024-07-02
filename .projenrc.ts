@@ -38,7 +38,12 @@ const project = new cdk.JsiiProject({
   // disable API.md for now
   docgen: false,
 });
+project.package.addEngine("node", ">=20.6.1");
+project.package.addEngine("pnpm", ">=9.4.0");
 project.gitignore.exclude(".env");
+// bundled dependencies require hoisting
+// https://pnpm.io/npmrc#node-linker
+project.npmrc.addConfig("node-linker", "hoisted");
 
 // project.eslint?.addRules({
 //   semi: ["error", "never"],
