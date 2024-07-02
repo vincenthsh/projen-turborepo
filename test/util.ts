@@ -31,7 +31,7 @@ export function createSubProject(
     name,
     defaultReleaseBranch: "master",
     projenrcTs: true,
-    packageManager: javascript.NodePackageManager.NPM,
+    packageManager: javascript.NodePackageManager.PNPM,
     ...options,
   });
 }

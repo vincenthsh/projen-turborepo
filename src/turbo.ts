@@ -5,12 +5,16 @@ import {
   Project,
   javascript,
   JsonFile,
+  YamlFile,
   JsonPatch,
   Task,
   github,
   DependencyType,
 } from "projen";
 import { TurborepoConfig } from "./turbo-config";
+
+export const INVALID_PACKAGE_MANAGER_ERROR =
+  "All sub-projects must use the same package manager as the root project";
 
 interface TurborepoConfigInternal extends TurborepoConfig {
   /**
@@ -207,6 +211,14 @@ export class TurborepoProject extends typescript.TypeScriptProject {
       obj: turbo,
     });
 
+    new YamlFile(this, "pnpm-workspace.yaml", {
+      obj: () => ({
+        packages: this.subProjects.map((p) =>
+          path.relative(this.outdir, p.outdir),
+        ),
+      }),
+    });
+
     /**
      * Monorepo root package is always private!
      */
@@ -275,6 +287,16 @@ export class TurborepoProject extends typescript.TypeScriptProject {
     const { subProjects } = this;
 
     if (
+      subProjects.some(
+        (p) =>
+          p instanceof javascript.NodeProject &&
+          p.package.packageManager !== this.package.packageManager,
+      )
+    ) {
+      throw new Error(INVALID_PACKAGE_MANAGER_ERROR);
+    }
+
+    if (
       this.deps.all.filter((d) => d.type === DependencyType.BUNDLED).length > 0
     ) {
       this.npmrc.addConfig("node-linker", "hoisted");
@@ -292,10 +314,6 @@ export class TurborepoProject extends typescript.TypeScriptProject {
         paths[subProject.package.packageName] = [`${workspace}/src`];
         packageNameSubProjectMap[subProject.package.packageName] = subProject;
       }
-    }
-
-    if (workspaces.length > 0) {
-      this.package.addField("workspaces", workspaces);
     }
 
     const turboBuildCommand = `npx turbo run build --api="${TURBO_CACHE_SERVER_API}" --token="${TURBO_CACHE_SERVER_TOKEN}" --team="${exp("github.repository_owner")}"`;

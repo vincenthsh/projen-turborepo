@@ -1,13 +1,14 @@
+import { javascript } from "projen";
 import { synthProjectSnapshot, createSubProject, createProject } from "./util";
+import { INVALID_PACKAGE_MANAGER_ERROR } from "../src";
 
 describe("TurborepoProject", () => {
-  it("should add workspaces", () => {
+  it("should add pnpm-workspace.yaml file", () => {
     expect.assertions(1);
 
     const project = createProject();
 
     const subProjectDir = "packages/baz";
-
     createSubProject({
       parent: project,
       outdir: subProjectDir,
@@ -15,7 +16,9 @@ describe("TurborepoProject", () => {
 
     const synth = synthProjectSnapshot(project);
 
-    expect(synth["package.json"].workspaces).toStrictEqual([subProjectDir]);
+    expect(synth["pnpm-workspace.yaml"]).toContain(
+      "packages:\n  - packages/baz",
+    );
   });
 
   it("should add TypeScript path mappings when turned on", () => {
@@ -231,5 +234,21 @@ describe("TurborepoProject", () => {
     expect(
       synth["packages/baz/tsconfig.json"].compilerOptions.paths.bar,
     ).toStrictEqual(["../../bar/pages"]);
+  });
+
+  it("should throw error if any of the sub-projects package manager differs from root package manager", () => {
+    expect.assertions(1);
+
+    const project = createProject();
+    const subProjectBarDir = "packages/bar";
+    createSubProject({
+      parent: project,
+      outdir: subProjectBarDir,
+      packageManager: javascript.NodePackageManager.YARN_CLASSIC,
+    });
+
+    expect(() => synthProjectSnapshot(project)).toThrowError(
+      INVALID_PACKAGE_MANAGER_ERROR,
+    );
   });
 });
