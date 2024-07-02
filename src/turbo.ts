@@ -8,6 +8,7 @@ import {
   JsonPatch,
   Task,
   github,
+  DependencyType,
 } from "projen";
 import { TurborepoConfig } from "./turbo-config";
 
@@ -116,9 +117,11 @@ export class TurborepoProject extends typescript.TypeScriptProject {
   constructor(options: TurborepoProjectOptions) {
     const packageManager =
       options.packageManager ?? javascript.NodePackageManager.PNPM;
+    const prettier = options.prettier ?? true;
     super({
       ...options,
       packageManager,
+      prettier,
       pnpmVersion: "9",
       jest: false,
       sampleCode: false,
@@ -130,6 +133,9 @@ export class TurborepoProject extends typescript.TypeScriptProject {
     this.jestModuleNameMapper = options.jestModuleNameMapper ?? false;
     this.parallelWorkflows = options.parallelWorkflows ?? false;
     this.vscodeMultiRootWorkspaces = options.vscodeMultiRootWorkspaces ?? false;
+
+    this.package.addEngine("node", ">=20.6.1");
+    this.package.addEngine("pnpm", ">=9.4.0");
 
     /**
      * Add turborepo as a dependency so we have the CLI.
@@ -267,6 +273,12 @@ export class TurborepoProject extends typescript.TypeScriptProject {
     super.preSynthesize();
 
     const { subProjects } = this;
+
+    if (
+      this.deps.all.filter((d) => d.type === DependencyType.BUNDLED).length > 0
+    ) {
+      this.npmrc.addConfig("node-linker", "hoisted");
+    }
 
     const workspaces: string[] = [];
     const paths: Record<string, string[]> = {};

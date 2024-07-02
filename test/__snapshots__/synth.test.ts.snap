@@ -200,13 +200,13 @@ Object {
     "name": "upgrade",
     "steps": Array [
       Object {
-        "exec": "pnpm dlx npm-check-updates@16 --upgrade --target=minor --peer --dep=dev,peer,prod,optional --filter=@vincenthsh/projen-turborepo,eslint-import-resolver-typescript,eslint-plugin-import,projen,turbo,typescript",
+        "exec": "pnpm dlx npm-check-updates@16 --upgrade --target=minor --peer --dep=dev,peer,prod,optional --filter=@vincenthsh/projen-turborepo,eslint-config-prettier,eslint-import-resolver-typescript,eslint-plugin-import,eslint-plugin-prettier,prettier,projen,turbo,typescript",
       },
       Object {
         "exec": "pnpm i --no-frozen-lockfile",
       },
       Object {
-        "exec": "pnpm update @types/node @typescript-eslint/eslint-plugin @typescript-eslint/parser @vincenthsh/projen-turborepo constructs eslint-import-resolver-typescript eslint-plugin-import eslint projen standard-version turbo typescript",
+        "exec": "pnpm update @types/node @typescript-eslint/eslint-plugin @typescript-eslint/parser @vincenthsh/projen-turborepo constructs eslint-config-prettier eslint-import-resolver-typescript eslint-plugin-import eslint-plugin-prettier eslint prettier projen standard-version turbo typescript",
       },
       Object {
         "exec": "npx projen",
