@@ -73,7 +73,26 @@ Object {
     "name": "eslint",
     "steps": Array [
       Object {
-        "exec": "eslint --ext .ts,.tsx --fix --no-error-on-unmatched-pattern src test build-tools .projenrc.js",
+        "exec": "eslint --ext .ts,.tsx --fix --no-error-on-unmatched-pattern $@ src test build-tools .projenrc.js",
+        "receiveArgs": true,
+      },
+    ],
+  },
+  "install": Object {
+    "description": "Install project dependencies and update lockfile (non-frozen)",
+    "name": "install",
+    "steps": Array [
+      Object {
+        "exec": "pnpm i --no-frozen-lockfile",
+      },
+    ],
+  },
+  "install:ci": Object {
+    "description": "Install project dependencies using frozen lockfile",
+    "name": "install:ci",
+    "steps": Array [
+      Object {
+        "exec": "pnpm i --frozen-lockfile",
       },
     ],
   },
@@ -181,28 +200,13 @@ Object {
     "name": "upgrade",
     "steps": Array [
       Object {
-        "exec": "yarn upgrade npm-check-updates",
+        "exec": "pnpm dlx npm-check-updates@16 --upgrade --target=minor --peer --dep=dev,peer,prod,optional --filter=@vincenthsh/projen-turborepo,eslint-import-resolver-typescript,eslint-plugin-import,projen,turbo,typescript",
       },
       Object {
-        "exec": "npm-check-updates --dep dev --upgrade --target=minor",
+        "exec": "pnpm i --no-frozen-lockfile",
       },
       Object {
-        "exec": "npm-check-updates --dep optional --upgrade --target=minor",
-      },
-      Object {
-        "exec": "npm-check-updates --dep peer --upgrade --target=minor",
-      },
-      Object {
-        "exec": "npm-check-updates --dep prod --upgrade --target=minor",
-      },
-      Object {
-        "exec": "npm-check-updates --dep bundle --upgrade --target=minor",
-      },
-      Object {
-        "exec": "yarn install --check-files",
-      },
-      Object {
-        "exec": "yarn upgrade",
+        "exec": "pnpm update @types/node @typescript-eslint/eslint-plugin @typescript-eslint/parser @vincenthsh/projen-turborepo constructs eslint-import-resolver-typescript eslint-plugin-import eslint projen standard-version turbo typescript",
       },
       Object {
         "exec": "npx projen",

@@ -42,42 +42,53 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: read
     outputs:
       self_mutation_happened: \${{ steps.self_mutation.outputs.self_mutation_happened }}
     env:
       CI: \\"true\\"
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: \${{ github.event.pull_request.head.ref }}
           repository: \${{ github.event.pull_request.head.repo.full_name }}
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: \\"9\\"
       - name: Install dependencies
-        run: yarn install --check-files --frozen-lockfile
+        run: pnpm i --frozen-lockfile
       - name: build
         run: npx projen build
-      - id: self_mutation
-        name: Find mutations
+      - name: Find mutations
+        id: self_mutation
         run: |-
           git add .
-          git diff --staged --patch --exit-code > .repo.patch || echo \\"::set-output name=self_mutation_happened::true\\"
-      - if: steps.self_mutation.outputs.self_mutation_happened
-        name: Upload patch
-        uses: actions/upload-artifact@v2
+          git diff --staged --patch --exit-code > .repo.patch || echo \\"self_mutation_happened=true\\" >> $GITHUB_OUTPUT
+        working-directory: ./
+      - name: Upload patch
+        if: steps.self_mutation.outputs.self_mutation_happened
+        uses: actions/upload-artifact@v4
         with:
           name: .repo.patch
           path: .repo.patch
+          overwrite: true
       - name: Fail build on mutation
         if: steps.self_mutation.outputs.self_mutation_happened
         run: |-
           echo \\"::error::Files were changed during build (see build log). If this was triggered from a fork, you will need to update your branch.\\"
           cat .repo.patch
           exit 1
+      - name: Backup artifact permissions
+        run: cd dist && getfacl -R . > permissions-backup.acl
+        continue-on-error: true
       - name: Upload artifact
-        uses: actions/upload-artifact@v2.1.1
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifact
           path: dist
+          overwrite: true
   turbo:
     name: turbo build
     needs: build
@@ -88,19 +99,26 @@ jobs:
     if: \\"! needs.build.outputs.self_mutation_happened\\"
     steps:
       - name: Download build artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: build-artifact
           path: dist
+      - name: Restore build artifact permissions
+        run: cd dist && setfacl --restore=permissions-backup.acl
+        continue-on-error: true
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Setup turbo cache
-        uses: felixmosh/turborepo-gh-artifacts@v1
+        uses: felixmosh/turborepo-gh-artifacts@v3
         with:
           repo-token: \${{ secrets.GITHUB_TOKEN }}
           server-token: \${{ github.sha }}
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: \\"9\\"
       - name: Install dependencies
-        run: yarn install --check-files --frozen-lockfile
+        run: pnpm i --frozen-lockfile
       - name: Build
         run: npx turbo run build --api=\\"http://127.0.0.1:9080\\" --token=\\"\${{ github.sha }}\\" --team=\\"\${{ github.repository_owner }}\\" --scope=\\"\${{ matrix.scope }}\\" --include-dependencies
     strategy:
@@ -124,42 +142,53 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: read
     outputs:
       self_mutation_happened: \${{ steps.self_mutation.outputs.self_mutation_happened }}
     env:
       CI: \\"true\\"
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: \${{ github.event.pull_request.head.ref }}
           repository: \${{ github.event.pull_request.head.repo.full_name }}
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: \\"9\\"
       - name: Install dependencies
-        run: yarn install --check-files --frozen-lockfile
+        run: pnpm i --frozen-lockfile
       - name: build
         run: npx projen build
-      - id: self_mutation
-        name: Find mutations
+      - name: Find mutations
+        id: self_mutation
         run: |-
           git add .
-          git diff --staged --patch --exit-code > .repo.patch || echo \\"::set-output name=self_mutation_happened::true\\"
-      - if: steps.self_mutation.outputs.self_mutation_happened
-        name: Upload patch
-        uses: actions/upload-artifact@v2
+          git diff --staged --patch --exit-code > .repo.patch || echo \\"self_mutation_happened=true\\" >> $GITHUB_OUTPUT
+        working-directory: ./
+      - name: Upload patch
+        if: steps.self_mutation.outputs.self_mutation_happened
+        uses: actions/upload-artifact@v4
         with:
           name: .repo.patch
           path: .repo.patch
+          overwrite: true
       - name: Fail build on mutation
         if: steps.self_mutation.outputs.self_mutation_happened
         run: |-
           echo \\"::error::Files were changed during build (see build log). If this was triggered from a fork, you will need to update your branch.\\"
           cat .repo.patch
           exit 1
+      - name: Backup artifact permissions
+        run: cd dist && getfacl -R . > permissions-backup.acl
+        continue-on-error: true
       - name: Upload artifact
-        uses: actions/upload-artifact@v2.1.1
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifact
           path: dist
+          overwrite: true
   turbo:
     name: turbo build
     needs: build
@@ -170,19 +199,26 @@ jobs:
     if: \\"! needs.build.outputs.self_mutation_happened\\"
     steps:
       - name: Download build artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: build-artifact
           path: dist
+      - name: Restore build artifact permissions
+        run: cd dist && setfacl --restore=permissions-backup.acl
+        continue-on-error: true
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Setup turbo cache
-        uses: felixmosh/turborepo-gh-artifacts@v1
+        uses: felixmosh/turborepo-gh-artifacts@v3
         with:
           repo-token: \${{ secrets.GITHUB_TOKEN }}
           server-token: \${{ github.sha }}
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: \\"9\\"
       - name: Install dependencies
-        run: yarn install --check-files --frozen-lockfile
+        run: pnpm i --frozen-lockfile
       - name: Build
         run: npx turbo run build --api=\\"http://127.0.0.1:9080\\" --token=\\"\${{ github.sha }}\\" --team=\\"\${{ github.repository_owner }}\\"
 "
