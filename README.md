@@ -9,6 +9,7 @@ To create a new project, run the following command and follow the instructions:
 ```sh
 $> mkdir my-monorepo
 $> cd my-monorepo
+$> cat "@vincenthsh:registry=https://npm.pkg.github.com/" >> ~/.npmrc
 $> npx projen new --from @vincenthsh/projen-turborepo --projenrc-ts
 🤖 Synthesizing project...
 ...

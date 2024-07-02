@@ -42,6 +42,17 @@ describe("TurborepoProject", () => {
     expect(synth["package.json"].private).toBe(true);
   });
 
+  it("should force pnpm node-linker to hoist for bundled deps", () => {
+    expect.assertions(1);
+
+    const project = createProject({
+      bundledDeps: ["dotalias"],
+    });
+    const synth = synthProjectSnapshot(project);
+
+    expect(synth[".npmrc"]).toContain("node-linker=hoisted");
+  });
+
   it("should add turbo runs commands", () => {
     expect.assertions(1);
 
