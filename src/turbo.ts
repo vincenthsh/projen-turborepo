@@ -4,6 +4,7 @@ import {
   typescript,
   Project,
   javascript,
+  cdk,
   JsonFile,
   YamlFile,
   JsonPatch,
@@ -355,9 +356,13 @@ export class TurborepoProject extends typescript.TypeScriptProject {
           .filter(({ name }) => packageNames.includes(name))
           .map(({ name }) => packageNameSubProjectMap[name]);
 
-        const references = depProjects
-          .map(({ outdir }) => path.relative(subProject.outdir, outdir))
-          .map((p) => ({ path: p }));
+        const references = [];
+        for (const depProject of depProjects) {
+          let relPath = path.relative(subProject.outdir, depProject.outdir);
+          if (ProjectUtils.isNamedInstanceOf(depProject, cdk.JsiiProject))
+            relPath = path.join(relPath, "tsconfig.dev.json");
+          references.push({ path: relPath });
+        }
 
         const pathMappings: Record<string, string> = {};
         for (const depProject of depProjects) {

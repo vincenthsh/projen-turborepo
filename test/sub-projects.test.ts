@@ -2,7 +2,7 @@ import { javascript } from "projen";
 import {
   synthProjectSnapshot,
   createSubProject,
-  createJSIISubProject,
+  createJSIISubProject as createJsiiSubProject,
   createProject,
   parseYaml,
 } from "./util";
@@ -91,7 +91,7 @@ describe("TurborepoProject", () => {
       outdir: subProjectBarDir,
     });
     const subProjectFooDir = "packages/foo";
-    const subProjectFoo = createJSIISubProject({
+    const subProjectFoo = createJsiiSubProject({
       parent: project,
       outdir: subProjectFooDir,
       deps: [subProjectBar.package.packageName],
@@ -143,6 +143,35 @@ describe("TurborepoProject", () => {
     expect(synth["packages/baz/tsconfig.json"].references).toStrictEqual([
       {
         path: "../bar",
+      },
+    ]);
+  });
+
+  it("should add JsiiProject references when turned on", () => {
+    expect.assertions(1);
+
+    const project = createProject({
+      projectReferences: true,
+    });
+
+    const subProjectBarDir = "packages/bar";
+    const subProjectBar = createJsiiSubProject({
+      parent: project,
+      outdir: subProjectBarDir,
+    });
+
+    const subProjectBazDir = "packages/baz";
+    createSubProject({
+      parent: project,
+      outdir: subProjectBazDir,
+      deps: [subProjectBar.package.packageName],
+    });
+
+    const synth = synthProjectSnapshot(project);
+
+    expect(synth["packages/baz/tsconfig.json"].references).toStrictEqual([
+      {
+        path: "../bar/tsconfig.dev.json", // JSII projects only have tsconfig.json
       },
     ]);
   });
