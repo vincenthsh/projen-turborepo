@@ -1,6 +1,6 @@
 import { tmpdir } from "os";
 import path from "path";
-import { typescript, javascript, Project, Testing } from "projen";
+import { typescript, javascript, cdk, Project, Testing } from "projen";
 import yaml from "yaml";
 import { TurborepoProject, TurborepoProjectOptions } from "../src";
 
@@ -32,6 +32,23 @@ export function createSubProject(
     defaultReleaseBranch: "master",
     projenrcTs: true,
     packageManager: javascript.NodePackageManager.PNPM,
+    ...options,
+  });
+}
+
+export function createJSIISubProject(
+  options: Partial<cdk.JsiiProjectOptions> = {},
+) {
+  const name = createProjectName("sub");
+
+  return new cdk.JsiiProject({
+    name,
+    defaultReleaseBranch: "master",
+    projenrcTs: true,
+    packageManager: javascript.NodePackageManager.PNPM,
+    repositoryUrl: name,
+    author: "author",
+    authorAddress: "au@hor.com",
     ...options,
   });
 }
