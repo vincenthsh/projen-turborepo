@@ -15,27 +15,7 @@ import { TurborepoConfig } from "./turbo-config";
 
 export const INVALID_PACKAGE_MANAGER_ERROR =
   "All sub-projects must use the same package manager as the root project";
-
-interface TurborepoConfigInternal extends TurborepoConfig {
-  /**
-   * The base branch or your git repository.
-   * Git is used by turbo in its hashing algorithm and `--since` CLI flag.
-   *
-   * @default 'origin/master'
-   *
-   * @see https://turborepo.org/docs/reference/configuration#basebranch
-   */
-  readonly baseBranch: string;
-
-  /**
-   * The NPM client in-use in your project.
-   *
-   * @default pnpm
-   *
-   * @see https://turborepo.org/docs/reference/configuration#npmclient
-   */
-  readonly npmClient?: string;
-}
+export const PNPM_VERSION = "9.4.0";
 
 export interface TurborepoProjectOptions
   extends typescript.TypeScriptProjectOptions {
@@ -126,7 +106,7 @@ export class TurborepoProject extends typescript.TypeScriptProject {
       ...options,
       packageManager,
       prettier,
-      pnpmVersion: "9",
+      pnpmVersion: PNPM_VERSION.charAt(0),
       jest: false,
       sampleCode: false,
       package: false,
@@ -139,7 +119,15 @@ export class TurborepoProject extends typescript.TypeScriptProject {
     this.vscodeMultiRootWorkspaces = options.vscodeMultiRootWorkspaces ?? false;
 
     this.package.addEngine("node", ">=20.6.1");
-    this.package.addEngine("pnpm", ">=9.4.0");
+    this.package.addEngine("pnpm", `>=${PNPM_VERSION}`);
+
+    // required for turbo 2.0
+    // ref: https://turbo.build/repo/docs/crafting-your-repository/upgrading#upgrading-to-20
+    // https://nodejs.org/api/packages.html#packagemanager
+    this.package.addField(
+      "packageManager",
+      `${javascript.NodePackageManager.PNPM}@${PNPM_VERSION}`,
+    );
 
     /**
      * Add turborepo as a dependency so we have the CLI.
@@ -161,7 +149,7 @@ export class TurborepoProject extends typescript.TypeScriptProject {
       JsonPatch.add("/jobs/build/permissions/packages", "read"),
     );
     const upgradeWorkflowYaml = this.tryFindObjectFile(
-      ".github/workflows/upgrade.yml",
+      ".github/workflows/upgrade-main.yml",
     );
     upgradeWorkflowYaml?.patch(
       JsonPatch.add("/jobs/upgrade/permissions/packages", "read"),
@@ -172,19 +160,11 @@ export class TurborepoProject extends typescript.TypeScriptProject {
      *
      * @see https://turborepo.org/docs/reference/configuration
      */
-    const outputs = ["build", "dist", "lib", "storybook-static"]
-      .sort()
-      .map((dir) => `${dir}/**`);
-    const turbo: TurborepoConfigInternal = {
-      npmClient: this.package.packageManager,
-
-      // TODO: Cannot get the value set in the projenrc file.
-      // @see https://github.com/projen/projen/issues/1427
-      baseBranch: `origin/${options.defaultReleaseBranch || "master"}`,
-
+    const outputs = ["build", "dist", "lib"].sort().map((dir) => `${dir}/**`);
+    const turbo: TurborepoConfig = {
       ...options.turbo,
 
-      pipeline: {
+      tasks: {
         build: {
           dependsOn: ["^build"],
           outputs,
@@ -203,20 +183,22 @@ export class TurborepoProject extends typescript.TypeScriptProject {
         watch: {
           cache: false,
         },
-        ...options.turbo?.pipeline,
+        ...options.turbo?.tasks,
       },
     };
 
     new JsonFile(this, "turbo.json", {
-      obj: turbo,
+      obj: {
+        $schema: "https://turbo.build/schema.json",
+        ...turbo,
+      },
     });
 
     new YamlFile(this, "pnpm-workspace.yaml", {
-      obj: () => ({
-        packages: this.subProjects.map((p) =>
-          path.relative(this.outdir, p.outdir),
-        ),
-      }),
+      obj: {
+        packages: () =>
+          this.subProjects.map((p) => path.relative(this.outdir, p.outdir)),
+      },
     });
 
     /**
@@ -316,7 +298,7 @@ export class TurborepoProject extends typescript.TypeScriptProject {
       }
     }
 
-    const turboBuildCommand = `npx turbo run build --api="${TURBO_CACHE_SERVER_API}" --token="${TURBO_CACHE_SERVER_TOKEN}" --team="${exp("github.repository_owner")}"`;
+    const turboBuildCommand = `pnpm dlx turbo run build --api="${TURBO_CACHE_SERVER_API}" --token="${TURBO_CACHE_SERVER_TOKEN}" --team="${exp("github.repository_owner")}"`;
     const matrixScopeKey = "scope";
     const matrixScope = exp(`matrix.${matrixScopeKey}`);
 
