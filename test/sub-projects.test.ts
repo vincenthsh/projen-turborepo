@@ -1,5 +1,10 @@
 import { javascript } from "projen";
-import { synthProjectSnapshot, createSubProject, createProject } from "./util";
+import {
+  synthProjectSnapshot,
+  createSubProject,
+  createProject,
+  parseYaml,
+} from "./util";
 import { INVALID_PACKAGE_MANAGER_ERROR } from "../src";
 
 describe("TurborepoProject", () => {
@@ -16,9 +21,9 @@ describe("TurborepoProject", () => {
 
     const synth = synthProjectSnapshot(project);
 
-    expect(synth["pnpm-workspace.yaml"]).toContain(
-      "packages:\n  - packages/baz",
-    );
+    expect(parseYaml(synth["pnpm-workspace.yaml"]).packages).toStrictEqual([
+      "packages/baz",
+    ]);
   });
 
   it("should add TypeScript path mappings when turned on", () => {

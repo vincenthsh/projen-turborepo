@@ -15,7 +15,7 @@ export function createProject(options: Partial<TurborepoProjectOptions> = {}) {
     outdir: path.join(tmpdir(), name),
     defaultReleaseBranch: "master",
     turbo: {
-      pipeline: {},
+      tasks: {},
     },
     ...options,
     clobber: false,

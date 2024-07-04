@@ -120,7 +120,7 @@ jobs:
       - name: Install dependencies
         run: pnpm i --frozen-lockfile
       - name: Build
-        run: npx turbo run build --api=\\"http://127.0.0.1:9080\\" --token=\\"\${{ github.sha }}\\" --team=\\"\${{ github.repository_owner }}\\" --scope=\\"\${{ matrix.scope }}\\" --include-dependencies
+        run: pnpm dlx turbo run build --api=\\"http://127.0.0.1:9080\\" --token=\\"\${{ github.sha }}\\" --team=\\"\${{ github.repository_owner }}\\" --scope=\\"\${{ matrix.scope }}\\" --include-dependencies
     strategy:
       fail-fast: true
       matrix:
@@ -220,6 +220,6 @@ jobs:
       - name: Install dependencies
         run: pnpm i --frozen-lockfile
       - name: Build
-        run: npx turbo run build --api=\\"http://127.0.0.1:9080\\" --token=\\"\${{ github.sha }}\\" --team=\\"\${{ github.repository_owner }}\\"
+        run: pnpm dlx turbo run build --api=\\"http://127.0.0.1:9080\\" --token=\\"\${{ github.sha }}\\" --team=\\"\${{ github.repository_owner }}\\"
 "
 `;
