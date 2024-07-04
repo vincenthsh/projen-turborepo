@@ -45,8 +45,4 @@ project.gitignore.exclude(".env");
 // https://pnpm.io/npmrc#node-linker
 project.npmrc.addConfig("node-linker", "hoisted");
 
-// project.eslint?.addRules({
-//   semi: ["error", "never"],
-// });
-
 project.synth();

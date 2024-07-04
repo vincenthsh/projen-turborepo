@@ -12,6 +12,7 @@ import {
   DependencyType,
 } from "projen";
 import { TurborepoConfig } from "./turbo-config";
+import { ProjectUtils } from "./utils";
 
 export const INVALID_PACKAGE_MANAGER_ERROR =
   "All sub-projects must use the same package manager as the root project";
@@ -271,7 +272,7 @@ export class TurborepoProject extends typescript.TypeScriptProject {
     if (
       subProjects.some(
         (p) =>
-          p instanceof javascript.NodeProject &&
+          ProjectUtils.isNamedInstanceOf(p, javascript.NodeProject) &&
           p.package.packageManager !== this.package.packageManager,
       )
     ) {
@@ -292,7 +293,7 @@ export class TurborepoProject extends typescript.TypeScriptProject {
       const workspace = path.relative(this.outdir, subProject.outdir);
       workspaces.push(workspace);
 
-      if (subProject instanceof javascript.NodeProject) {
+      if (ProjectUtils.isNamedInstanceOf(subProject, javascript.NodeProject)) {
         paths[subProject.package.packageName] = [`${workspace}/src`];
         packageNameSubProjectMap[subProject.package.packageName] = subProject;
       }
@@ -347,7 +348,9 @@ export class TurborepoProject extends typescript.TypeScriptProject {
     for (const subProject of subProjects) {
       const packageNames = Object.keys(packageNameSubProjectMap);
 
-      if (subProject instanceof typescript.TypeScriptProject) {
+      if (
+        ProjectUtils.isNamedInstanceOf(subProject, typescript.TypeScriptProject)
+      ) {
         const depProjects = subProject.deps.all
           .filter(({ name }) => packageNames.includes(name))
           .map(({ name }) => packageNameSubProjectMap[name]);
@@ -358,7 +361,12 @@ export class TurborepoProject extends typescript.TypeScriptProject {
 
         const pathMappings: Record<string, string> = {};
         for (const depProject of depProjects) {
-          if (depProject instanceof typescript.TypeScriptProject) {
+          if (
+            ProjectUtils.isNamedInstanceOf(
+              depProject,
+              typescript.TypeScriptProject,
+            )
+          ) {
             pathMappings[depProject.package.packageName] = [
               path.relative(subProject.outdir, depProject.outdir),
               depProject.srcdir,
@@ -397,7 +405,12 @@ export class TurborepoProject extends typescript.TypeScriptProject {
             tsconfig?.file.addOverride("references", references);
 
             for (const depProject of depProjects) {
-              if (depProject instanceof typescript.TypeScriptProject) {
+              if (
+                ProjectUtils.isNamedInstanceOf(
+                  depProject,
+                  typescript.TypeScriptProject,
+                )
+              ) {
                 for (const depTsconfig of [
                   depProject.tsconfig,
                   depProject.tsconfigDev,
@@ -482,7 +495,11 @@ export class TurborepoProject extends typescript.TypeScriptProject {
       vscodeConfig.settings["jest.disabledWorkspaceFolders"] = [
         this.name,
         ...subProjects
-          .filter((sp) => sp instanceof javascript.NodeProject && !sp.jest) // jest disabled
+          .filter(
+            (sp) =>
+              ProjectUtils.isNamedInstanceOf(sp, javascript.NodeProject) &&
+              !sp.jest,
+          ) // jest disabled
           .map((sp) => sp.name),
       ];
 

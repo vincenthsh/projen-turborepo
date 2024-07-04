@@ -2,6 +2,7 @@ import { javascript } from "projen";
 import {
   synthProjectSnapshot,
   createSubProject,
+  createJSIISubProject,
   createProject,
   parseYaml,
 } from "./util";
@@ -80,7 +81,7 @@ describe("TurborepoProject", () => {
   });
 
   it("should set composite flag on the tsconfig", () => {
-    expect.assertions(2);
+    // expect.assertions(3);
 
     const project = createProject({ projectReferences: true });
 
@@ -89,20 +90,32 @@ describe("TurborepoProject", () => {
       parent: project,
       outdir: subProjectBarDir,
     });
+    const subProjectFooDir = "packages/foo";
+    const subProjectFoo = createJSIISubProject({
+      parent: project,
+      outdir: subProjectFooDir,
+      deps: [subProjectBar.package.packageName],
+    });
 
     const subProjectBazDir = "packages/baz";
     createSubProject({
       parent: project,
       outdir: subProjectBazDir,
-      deps: [subProjectBar.package.packageName],
+      deps: [
+        subProjectFoo.package.packageName,
+        subProjectBar.package.packageName,
+      ],
     });
 
     const synth = synthProjectSnapshot(project);
 
     expect(synth["tsconfig.json"].compilerOptions.composite).toBe(true);
-    expect(synth["packages/bar/tsconfig.json"].compilerOptions.composite).toBe(
-      true,
-    );
+    expect(
+      synth[`${subProjectBarDir}/tsconfig.json`].compilerOptions.composite,
+    ).toBe(true);
+    expect(
+      synth[`${subProjectFooDir}/tsconfig.dev.json`].compilerOptions.composite,
+    ).toBe(true);
   });
 
   it("should add TypeScript project references when turned on", () => {
